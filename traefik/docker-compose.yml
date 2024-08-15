@@ -1,0 +1,62 @@
+services:
+  traefik:
+    image: traefik
+    container_name: traefik
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.${HOST_DOMAIN}`) && PathPrefix(`/api`) || Host(`traefik.${HOST_DOMAIN}`) && PathPrefix(`/dashboard`)
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=traefik-auth
+      - traefik.http.middlewares.traefik-auth.basicauth.usersfile=/run/secrets/traefik-usersfile
+    ports:
+      - 443:443
+      - 80:80
+    environment:
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cf-dns-api-token
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yaml:/etc/traefik/traefik.yaml
+      - ./external:/external
+      - traefik-letsencrypt:/letsencrypt
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    secrets:
+      - cf-dns-api-token
+      - traefik-usersfile
+
+  dockge:
+    image: louislam/dockge
+    container_name: dockge
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockge:/app/data
+      - ./stacks:/stacks
+    environment:
+      - DOCKGE_STACKS_DIR=/stacks
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dockge.rule=Host(`dockge.${HOST_DOMAIN}`)
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    command: --interval 30
+
+secrets:
+  cf-dns-api-token:
+    file: ./secrets/cf-dns-api-token.secret
+  traefik-usersfile:
+    file: ./secrets/usersfile.secret
+
+networks:
+  default:
+    name: traefik
+
+volumes:
+  traefik-letsencrypt:
+  dockge:

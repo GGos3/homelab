@@ -1,0 +1,14 @@
+http:
+  routers:
+    router0:
+      entryPoints:
+        - web
+        - websecure
+      rule: Host(`blog.${DOMAIN}`)
+      service: blog
+
+  services:
+    blog:
+      loadBalancer:
+        servers:
+          - url: ${BLOG_SERVER_URL}
