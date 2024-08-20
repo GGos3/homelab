@@ -1,4 +1,5 @@
-accessLog: {}
+accessLog:
+  filePath: /logs/access.log
 
 certificatesResolvers:
   http-resolver:

@@ -16,14 +16,32 @@ services:
       - CF_DNS_API_TOKEN_FILE=/run/secrets/cf-dns-api-token
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
       - ./traefik.yaml:/etc/traefik/traefik.yaml
       - ./external:/external
-      - traefik-letsencrypt:/letsencrypt
+      - ./logs:/logs
     extra_hosts:
       - host.docker.internal:host-gateway
     secrets:
       - cf-dns-api-token
       - traefik-usersfile
+
+  goaccess:
+    image: 'xavierh/goaccess-for-nginxproxymanager:latest'
+    container_name: goaccess
+    restart: always
+    ports:
+      - 7880:7880
+    environment:
+      - TZ=Asia/Seoul
+      - SKIP_ARCHIVED_LOGS=False
+      - DEBUG=True
+      - ENABLE_BROWSERS_LIST=True
+      - CUSTOM_BROWSERS=Kuma:Uptime,TestBrowser:Crawler
+      - LOG_TYPE=TRAEFIK
+      - EXCLUDE_IPS=${GOACCESS_EXCLUDE_IPS}
+    volumes:
+      - ./logs:/opt/log
 
   dockge:
     image: louislam/dockge
