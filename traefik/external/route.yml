@@ -6,36 +6,12 @@ http:
         - websecure
       rule: Host(`blog.${HOST_DOMAIN}`)
       service: blog
-    router1:
-      entryPoints:
-        - web
-        - websecure
-      rule: Host(`pve1.${HOST_DOMAIN}`)
-      service: proxmox-1
-    router2:
-      entryPoints:
-        - web
-        - websecure
-      rule: Host(`pve2.${HOST_DOMAIN}`)
-      service: proxmox-2
 
   services:
     blog:
       loadBalancer:
         servers:
           - url: ${BLOG_SERVER_URL}
-    proxmox-1:
-      loadBalancer:
-        passHostHeader: true
-        serversTransport: "pve"
-        servers:
-          - url: ${PROXMOX_NODE_1_URL}
-    proxmox-2:
-        loadBalancer:
-          passHostHeader: true
-          serversTransport: "pve"
-          servers:
-            - url: ${PROXMOX_NODE_2_URL}
 
   serversTransports:
     pve:
